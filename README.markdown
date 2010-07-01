@@ -1,4 +1,5 @@
-= Wordnik API: PHP Client
+Wordnik API: PHP Client
+-----------------------
 
 This is the official PHP client library for the Wordnik API.
 
@@ -10,7 +11,7 @@ http://api.wordnik.com/signup/
 
 After you receive your key, use it to initialize an instance of Wordnik: 
 
-require_once('Wordnik.php');
+    require_once('Wordnik.php');
     $wordnik = Wordnik::instance('YOUR_API_KEY');
 
 Now you can use $wordnik to access the API.  For example:
@@ -35,8 +36,8 @@ And now we can loop over these definitions in our template:
 Via the API, you can get a lot of data about words, and you can also create
 and manage word lists.
 
-= Resources
-
+Resources
+---------
 Wordnik API Documentation: http://docs.wordnik.com/api/methods
 
 Wordnik API Key Signup: http://api.wordnik.com/signup
@@ -44,3 +45,8 @@ Wordnik API Key Signup: http://api.wordnik.com/signup
 Wordnik API Support: http://groups.google.com/group/wordnik-api
 
 Please send comments or questions to apiteam@wordnik.com.
+
+Copyright
+---------
+
+Copyright (c) 2010 Altay Guvench / Wordnik.com. See LICENSE for details.
