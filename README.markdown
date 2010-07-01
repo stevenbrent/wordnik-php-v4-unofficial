@@ -1,5 +1,5 @@
 Wordnik API: PHP Client
------------------------
+=======================
 
 This is the official PHP client library for the Wordnik API.
 
