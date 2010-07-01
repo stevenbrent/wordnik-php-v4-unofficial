@@ -126,7 +126,7 @@ class Wordnik {
 
   /*
    *Pass in a word as a string, get back punctuation factor.
-   *More info: http://docs.wordnik.com/api/methods#frequency
+   *More info: http://docs.wordnik.com/api/methods#punc
    */
 	public function getPunctuation($word) {
 		if(is_null($word) || trim($word) == '') {
@@ -135,14 +135,37 @@ class Wordnik {
 		return $this->call_api('/word.json/' . rawurlencode($word) . '/punctuationFactor');
 	}
 
-	/** Pass in a word as a string, get back the Word of the Day. */
+  /*
+   *Pass in a word as a string, get back text pronunciations
+   *More info: http://docs.wordnik.com/api/methods#textpron
+   */
+	public function getTextPronunciations($word) {
+		if(is_null($word) || trim($word) == '') {
+			throw new InvalidParameterException("getPunctuation expects word to be a string");
+		}
+		return $this->call_api('/word.json/' . rawurlencode($word) . '/pronunciations');
+	}
+
+  /*
+   *Get the Word of the Day
+   *More info: http://docs.wordnik.com/api/methods#wotd
+   */
 	public function getWordOfTheDay() {
 		return $this->call_api( '/wordoftheday.json/' );
 	}
 	
-	/** Pass in a word as a string, get back a random word. */
-	public function getRandomWord() {
-		return $this->call_api( '/words.json/randomWord' );
+  /*
+   *Get a random word from the Wordnik corpus
+   *Optional params:
+   *  has_definiton : force the method to return a word with a definition (default=true)
+   *More info: http://docs.wordnik.com/api/methods#wotd
+   */
+	public function getRandomWord($has_definition=true) {
+    $params = array();
+    if (!$has_definition) {
+      $params['hasDictionaryDef'] = false;
+    }
+		return $this->call_api('/words.json/randomWord', $params);
 	}
 	
 	/** Utility method to call json apis.
