@@ -147,18 +147,36 @@ class Wordnik {
 	}
 
   /*
+   *Pass in a word fragment as a string, get back suggested words that start with that phrase.
+   *Useful for autocomplete functionality.
+   *Optional params:
+   *  count : the number of results to return
+   *  start_at : the offset for the results (useful for pagination)
+   *More info: http://docs.wordnik.com/api/methods#auto
+   */
+	public function getSuggestions($word_fragment, $count=10, $start_at=0) {
+		if(is_null($word_fragment) || trim($word_fragment) == '') {
+			throw new InvalidParameterException("Autocomplete expects word to be a string");
+		}
+    $params = array();
+    $params['count'] = $count;
+    $params['startAt'] = $start_at;
+		return $this->call_api('/suggest.json/' . rawurlencode($word_fragment), $params);
+	}
+
+  /*
    *Get the Word of the Day
    *More info: http://docs.wordnik.com/api/methods#wotd
    */
 	public function getWordOfTheDay() {
-		return $this->call_api( '/wordoftheday.json/' );
+		return $this->call_api('/wordoftheday.json/');
 	}
 	
   /*
    *Get a random word from the Wordnik corpus
    *Optional params:
    *  has_definiton : force the method to return a word with a definition (default=true)
-   *More info: http://docs.wordnik.com/api/methods#wotd
+   *More info: http://docs.wordnik.com/api/methods#random
    */
 	public function getRandomWord($has_definition=true) {
     $params = array();
