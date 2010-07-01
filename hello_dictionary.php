@@ -1,7 +1,8 @@
 <?php 
   require("Wordnik.php"); 
+  $api_key = "YOUR_API_KEY";
   // create an instance of the Wordnik class, to make api calls
-  $wordnik = Wordnik::instance();
+  $wordnik = Wordnik::instance($api_key);
   // get the Word of the Day
   $wotd = $wordnik->getWordOfTheDay();
   $wotd = $wotd->wordstring;

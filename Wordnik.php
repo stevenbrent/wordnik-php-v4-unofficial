@@ -1,11 +1,9 @@
 <?
 /**
- * This is a simple interface to the Wordnik API, which wraps API calls with
- * PHP methods, and returns arrays of standard php objects containing the results.
+ * This is the official PHP client library for the Wordnik API.
  *
- * These examples only show a few of the available API calls (for getting definitions,
- * examples, related words, Wordnik's word of the say, and random words). See the full list here:
- * http://docs.wordnik.com/api/methods
+ * It wraps all the API calls listed here: http://docs.wordnik.com/api/methods
+ * with PHP methods, and returns arrays of standard php objects containing the results.
  *
  * To use the API you'll need a key, which you can apply for here:
  * http://api.wordnik.com/signup/
@@ -36,14 +34,18 @@
  */
 class Wordnik {
 	
-	const API_KEY = "85b993ddaabe04346e0090d379b02d18ad04bda75d4e0ecca";//"YOUR_API_KEY_HERE";
+  // the base url for all wordnik api calls
 	const BASE_URI = 'http://api.wordnik.com/api';
 	
 	/** If there's an existing Wordnik instance, return it, otherwise create and return a new one. */
 	private static $instance;
-	public static function instance() {
+	public static function instance($api_key) {
 		if (self::$instance == NULL) {
+      if (!isset($api_key) || $api_key=="YOUR_API_KEY" || trim($api_key)=='') {
+        throw new Exception("You need to specify a valid api_key!");
+      }
 			self::$instance = new Wordnik();
+      self::$instance->api_key=$api_key;
 		}
 		
 		return self::$instance;
@@ -61,7 +63,7 @@ class Wordnik {
 		}
     $params = array();
     $params['count'] = $count;
-		return $this->call_api('/word.json/' . rawurlencode($word) . '/phrases', $params);
+		return $this->callApi('/word.json/' . rawurlencode($word) . '/phrases', $params);
 	}
 	
   /*
@@ -80,7 +82,7 @@ class Wordnik {
     if (isset($part_of_speech)) {
       $params['partOfSpeech'] = $part_of_speech;
     }
-		return $this->call_api('/word.json/' . rawurlencode($word) . '/definitions', $params);
+		return $this->callApi('/word.json/' . rawurlencode($word) . '/definitions', $params);
 	}
 
   /*
@@ -91,7 +93,7 @@ class Wordnik {
 		if(is_null($word) || trim($word) == '') {
 			throw new InvalidParameterException("getExamples expects word to be a string");
 		}
-		return $this->call_api( '/word.json/' . rawurlencode($word) . '/examples' );
+		return $this->callApi( '/word.json/' . rawurlencode($word) . '/examples' );
 	}
 	
   /*
@@ -110,7 +112,7 @@ class Wordnik {
     if (isset($type)) {
       $params['type'] = $type;
     }
-		return $this->call_api('/word.json/' . rawurlencode($word) . '/related', $params);
+		return $this->callApi('/word.json/' . rawurlencode($word) . '/related', $params);
 	}
 
   /*
@@ -121,7 +123,7 @@ class Wordnik {
 		if(is_null($word) || trim($word) == '') {
 			throw new InvalidParameterException("getFrequency expects word to be a string");
 		}
-		return $this->call_api('/word.json/' . rawurlencode($word) . '/frequency');
+		return $this->callApi('/word.json/' . rawurlencode($word) . '/frequency');
 	}
 
   /*
@@ -132,7 +134,7 @@ class Wordnik {
 		if(is_null($word) || trim($word) == '') {
 			throw new InvalidParameterException("getPunctuation expects word to be a string");
 		}
-		return $this->call_api('/word.json/' . rawurlencode($word) . '/punctuationFactor');
+		return $this->callApi('/word.json/' . rawurlencode($word) . '/punctuationFactor');
 	}
 
   /*
@@ -143,7 +145,7 @@ class Wordnik {
 		if(is_null($word) || trim($word) == '') {
 			throw new InvalidParameterException("getPunctuation expects word to be a string");
 		}
-		return $this->call_api('/word.json/' . rawurlencode($word) . '/pronunciations');
+		return $this->callApi('/word.json/' . rawurlencode($word) . '/pronunciations');
 	}
 
   /*
@@ -161,7 +163,7 @@ class Wordnik {
     $params = array();
     $params['count'] = $count;
     $params['startAt'] = $start_at;
-		return $this->call_api('/suggest.json/' . rawurlencode($word_fragment), $params);
+		return $this->callApi('/suggest.json/' . rawurlencode($word_fragment), $params);
 	}
 
   /*
@@ -169,7 +171,7 @@ class Wordnik {
    *More info: http://docs.wordnik.com/api/methods#wotd
    */
 	public function getWordOfTheDay() {
-		return $this->call_api('/wordoftheday.json/');
+		return $this->callApi('/wordoftheday.json/');
 	}
 	
   /*
@@ -183,18 +185,134 @@ class Wordnik {
     if (!$has_definition) {
       $params['hasDictionaryDef'] = false;
     }
-		return $this->call_api('/words.json/randomWord', $params);
+		return $this->callApi('/words.json/randomWord', $params);
 	}
+
+  /*
+   *Authenticate this instance of Wordnik.
+   *You need to do this before making any list-related calls.
+   *Required params:
+   *  username : the authenticating user
+   *  password : the authenticating user's password
+   *More info: http://docs.wordnik.com/api/methods#auth
+   */
+  public function getAuthToken($username, $password) {
+		if(is_null($username) || trim($username) == '') {
+			throw new InvalidParameterException("Authentication expects username to be a string");
+		}
+    $params = array();
+    $params['password'] = $password;
+		$auth_info = $this->callApi('/account.json/authenticate/' . urlencode($username), $params);
+    $this->auth_token = $auth_info->token;
+    return $this->auth_token;
+  }
+
+  /*
+   *Ensures that this instance of Wordnik has been authenticated.
+   *(See getAuthToken)
+   */
+  private function ensureAuthentic() {
+    if (!isset($this->auth_token)) {
+      throw new Exception("You need to call getAuthToken before requesting this api resource.");
+    } else {
+      return true;
+    }
+  }
+
+  /*
+   *Get all of the authenticated user's lists.
+   *Note: you must call getAuthToken before calling this.
+   *More info: http://docs.wordnik.com/api/methods#lists
+   */
+  public function getLists() {
+    $this->ensureAuthentic();
+    return $this->callApi('/wordLists.json/');
+  }
+
+  /*
+   *Create a new list on behalf of the authenticated user.
+   *Note: you must call getAuthToken before calling this.
+   *Required params:
+   *  name : the name of this list
+   *  description : a description about this list
+   *Optional param:
+   *  type : list permissions, either 'PUBLIC' or 'PRIVATE'
+   *More info: http://docs.wordnik.com/api/methods#lists
+   */
+  public function createList($name, $description, $type='PUBLIC') {
+    $this->ensureAuthentic();
+    $params = array();
+    $params['name'] = $name;
+    $params['description'] = $description;
+    $params['type'] = $type;
+    return $this->callApi('/wordLists.json/', $params, 'post');
+  }
+
+  /*
+   * Delete the given list on behalf of the authenticated user.
+   * Note: you must call getAuthToken before calling this.
+   * Required params:
+   *   list_permalink : the list's permalink id
+   */
+  public function deleteList($list_permalink) { 
+    $this->ensureAuthentic();
+    return $this->callApi('/wordList.json/'.$list_permalink, null, 'delete');
+  }
+
+  /*
+   * Get all the words in the given list
+   * Note: you must call getAuthToken before calling this.
+   * Required params:
+   *   list_permalink : the list's permalink id
+   */
+  public function getListWords($list_permalink) {
+    $this->ensureAuthentic();
+    return $this->callApi('/wordList.json/'.$list_permalink.'/words');
+  }
+
+  /*
+   * Add a word to the given list
+   * Note: you must call getAuthToken before calling this.
+   * Required params:
+   *   wordstring : the word to add to the list
+   *   list_permalink : the list's permalink id
+   */
+  public function addWordToList($wordstring, $list_permalink) {
+    $this->ensureAuthentic();
+    $params = array();
+    $params['wordstring'] = $wordstring;
+    $param_container = array();
+    $param_container[] = $params;
+    return $this->callApi('/wordList.json/'.$list_permalink.'/words', $param_container, 'post');
+  }
+
+  /*
+   * Delete a word from the given list
+   * Note: you must call getAuthToken before calling this.
+   * Required params:
+   *   wordstring : the word to delete from the list
+   *   list_permalink : the list's permalink id
+   */
+  public function deleteWordFromList($wordstring, $list_permalink) {
+    $this->ensureAuthentic();
+    $params = array();
+    $params['wordstring'] = $wordstring;
+    $param_container = array();
+    $param_container[] = $params;
+    return $this->callApi('/wordList.json/'.$list_permalink.'/deleteWords', $param_container, 'post');
+  }
 	
 	/** Utility method to call json apis.
 	  * This presumes you want JSON back; could be adapted for XML pretty easily. */
-	private function call_api($url, $params=array(), $method='get') {
-		
+	private function callApi($url, $params=array(), $method='get') {
 		$data = null;
 
 		$headers = array();
 		$headers[] = "Content-type: application/json";
-		$headers[] = "api_key: " . self::API_KEY;
+		$headers[] = "api_key: " . $this->api_key;
+    if (isset($this->auth_token)) {
+      $headers[] = "auth_token: " . $this->auth_token;
+    }
 
 		$url = (self::BASE_URI . $url);
 
@@ -207,6 +325,9 @@ class Wordnik {
 		  $url = ($url . '?' . http_build_query($params));
     } else if ($method=='post') { // set post data if the method is post
       curl_setopt($curl,CURLOPT_POST,true);
+      curl_setopt($curl,CURLOPT_POSTFIELDS, json_encode($params));
+    } else if ($method=='delete') { // set post data if the method is post
+      curl_setopt($curl,CURLOPT_CUSTOMREQUEST,"DELETE");
       curl_setopt($curl,CURLOPT_POSTFIELDS, json_encode($params));
     }
 
@@ -222,7 +343,7 @@ class Wordnik {
 		} else if ($response_info['http_code'] == 200) {
 			$data = json_decode($response);
 		} else if ($response_info['http_code'] == 401) {
-			throw new Exception( "Unauthorized API request to " . $url . " . Have you specified your API Key?" );
+			throw new Exception( "Unauthorized API request to " . $url . ": ".json_decode($response)->message );
 		} else if ($response_info['http_code'] == 404) {
 			$data = null;
 		} else {
@@ -230,7 +351,6 @@ class Wordnik {
 		}
 
 		return $data;
-		
 	}
 	
 }
