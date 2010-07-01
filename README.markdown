@@ -3,11 +3,11 @@ Wordnik API: PHP Client
 
 This is the official PHP client library for the Wordnik API.
 
-It wraps all the API calls listed here: http://docs.wordnik.com/api/methods
+It wraps all the API calls listed here: <http://docs.wordnik.com/api/methods>
 with PHP methods, and returns arrays of standard php objects containing the results.
 
 To use this library, you'll need an API key, which you can get here:
-http://api.wordnik.com/signup/
+<http://api.wordnik.com/signup>
 
 After you receive your key, use it to initialize an instance of Wordnik: 
 
@@ -38,13 +38,13 @@ and manage word lists.
 
 Resources
 ---------
-Wordnik API Documentation: http://docs.wordnik.com/api/methods
+Wordnik API Documentation: <http://docs.wordnik.com/api/methods>
 
-Wordnik API Key Signup: http://api.wordnik.com/signup
+Wordnik API Key Signup: <http://api.wordnik.com/signup>
 
-Wordnik API Support: http://groups.google.com/group/wordnik-api
+Wordnik API Support: <http://groups.google.com/group/wordnik-api>
 
-Please send comments or questions to apiteam@wordnik.com.
+Please send comments or questions to <apiteam@wordnik.com>.
 
 Copyright
 ---------
